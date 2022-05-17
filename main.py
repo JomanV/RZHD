@@ -3,50 +3,35 @@
 #TODO3: make a select query that shows run timetables like in http://izformatika.ru/mod/assign/view.php?id=2564
 #TODO4: (optional for this task) add foreign keys
 
+def clean_data(_dict): # proplem: after every loop length of dict decreases, so we get out of range
+    if len(_dict)!=0:
+        for i in range(len(_dict)-1,-1,-1):
+            if _dict[i]=='':
+                del _dict[i]
+        return _dict
+    return 0
+
+def clean_text(_text):
+    return open(_text,'r').read().replace('\n','').replace('\t','')
 import sqlite3
+from Integrity_check import *
 
-create_table=[]
-tables_fill=[]
+file_name='file_RZHD.db'
 
+a=clean_text('tables_and_creation_code.txt')
+b=clean_text('tables_fill.txt')
+if a != 0 and b != 0:
+    tb_creation_dict=clean_data(eval(a))
+    tb_fill_dict=clean_data(eval(b))
+    print(tb_fill_dict,tb_creation_dict)
 
-def _create_tables():
-    conn = sqlite3.connect('railways.db')
-    for i in range(len(create_table)):
-        conn.execute(create_table[i][0])
-        conn.commit()
-    conn.close()  
+    integrity_check(file_name,tb_creation_dict,tb_fill_dict)
 
-def _fill():
-    conn = sqlite3.connect('railways.db')
-    conn.execute()
-    conn.commit()
-    conn.close()     
-
-def _check_tables():
-    conn = sqlite3.connect('railways.db')
+    conn = sqlite3.connect(file_name)
     cursor = conn.cursor()
     cursor.execute('''
-    SELECT name FROM sqlite_master WHERE type='table';''')
-    res = cursor.fetchall()
-    for r in res:
-        print(r)
-    
-def _db_init():    
-    _create_tables()
-    _check_tables()
-     #_fill()
-
-from os.path import exists
-
-if not exists('railways.db'):
-    _db_init()
-
-#fill_locomotive_types()
-conn = sqlite3.connect('railways.db')
-cursor = conn.cursor()
-
-cursor.execute()
-res = cursor.fetchall()
-
-for r in res:
-    print(r)
+    SELECT * FROM locomotive_types;
+    ''')
+    print(*cursor.fetchall(),sep='\n')
+else:
+    print(a,b,sep='\n\n')
