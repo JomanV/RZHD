@@ -7,39 +7,57 @@ import sqlite3
 
 _file='file_RZHD.db'
 
-create_table=[
-        ['''CREATE TABLE locomotive_types
+create_table={'locomotive_types':
+         '''CREATE TABLE locomotive_types
             (
             locomotive_type_id INTEGER PRIMARY KEY NOT NULL,
             type_name TEXT NOT NULL
             );'''
-            , 'locomotive_types']
 
-    ]
+    }
 tables_fill={'locomotive_types':[
-            ['паровоз'], 
-            ['электровоз']
+            ['Паровоз'], 
+            ['Тепловоз'],
+            ['Электровоз']
         ]
 
     }
-
+    
+    
 
 def _create_tables():
     conn = sqlite3.connect(_file)
-    for i in range(len(create_table)):
-        conn.execute(create_table[i][0])
+    for i in create_table:
+        conn.execute(crate_table[i])
         conn.commit()
     conn.close()  
+    
+def _fill_table(table, conn):
+    for j in range(len(tables_fill[table])):
+        conn.execute('''insert into {0}(type_name) values('{1}'); '''.format(table,', '.join(tables_fill[table][j])))
+        conn.commit()
 
-def _fill():
+def _fill_tables():
     conn = sqlite3.connect(_file)
-    for i in range(len(tables_fill)):
-        table_name=create_table[i][1]
-        for j in range(len(tables_fill[table_name])):
-            conn.execute('''insert into {0}(type_name) values('{1}'); '''.format(table_name,', '.join(tables_fill[table_name][j])))
-            conn.commit()
+    for i in tables_fill:
+        _fill_table(i, conn)
     conn.close()     
 
+def _check_change(): 
+    conn = sqlite3.connect(_file)
+    for table_name in tables_fill:
+        cursor = conn.cursor()
+        cursor.execute('''SELECT * FROM {};'''.format(table_name))        
+        table_values=cursor.fetchall()
+        
+        _len=len(tables_fill[table_name])
+        if _len != len(table_values) or _len > 0:
+            return True
+        for j in range(_len):
+            if ', '.join(table_values[j][1:]) != ', '.join(tables_fill[table_name][j]):#possible error: the order is not guaranteed to stay the same
+                return True
+        return False
+                
 def _check_tables():
     conn = sqlite3.connect(_file)
     cursor = conn.cursor()
@@ -51,13 +69,30 @@ def _check_tables():
 def _db_init():    
     _create_tables()
     _check_tables()
-    _fill()
+    _fill_tables()
+
+def _erase_table(table):
+    conn = sqlite3.connect(_file)
+    for i in tables_fill:
+        cursor = conn.cursor()
+        cursor.execute('''DROP TABLE {};'''.format(i)) 
+
+def _erase_tables():
+    conn = sqlite3.connect(_file)
+    for i in tables_fill:
+        _erase_table(i)
+    conn.close() 
 
 from os.path import exists
 
-if not exists('file_RZHD.db'):
+if not exists(_file):
     _db_init()
-else: _check_tables()
+elif _check_change():
+    _erase_tables()
+    _db_init()
+    
+else:
+    _check_tables()
     
 conn = sqlite3.connect(_file)
 cursor = conn.cursor()
