@@ -5,14 +5,18 @@
 
 def clean_data(_dict): # proplem: after every loop length of dict decreases, so we get out of range
     if len(_dict)!=0:
-        for i in range(len(_dict)-1,-1,-1):
+        _del=[]
+        for i in _dict:
             if _dict[i]=='':
-                del _dict[i]
+                _del.append(i)
+        for i in _del:
+            del _dict[i]
         return _dict
     return 0
 
 def clean_text(_text):
     return open(_text,'r').read().replace('\n','').replace('\t','')
+
 import sqlite3
 from Integrity_check import *
 
@@ -20,11 +24,11 @@ file_name='file_RZHD.db'
 
 a=clean_text('tables_and_creation_code.txt')
 b=clean_text('tables_fill.txt')
-if a != 0 and b != 0:
-    tb_creation_dict=clean_data(eval(a))
-    tb_fill_dict=clean_data(eval(b))
-    print(tb_fill_dict,tb_creation_dict)
 
+tb_creation_dict=clean_data(eval(a))
+tb_fill_dict=clean_data(eval(b))
+
+if len(tb_fill_dict)!=0 and len(tb_creation_dict)!=0:
     integrity_check(file_name,tb_creation_dict,tb_fill_dict)
 
     conn = sqlite3.connect(file_name)
@@ -32,6 +36,7 @@ if a != 0 and b != 0:
     cursor.execute('''
     SELECT * FROM locomotive_types;
     ''')
+
     print(*cursor.fetchall(),sep='\n')
-else:
-    print(a,b,sep='\n\n')
+
+print(*tb_fill_dict,'\n',*tb_creation_dict,sep='\n')

@@ -74,12 +74,15 @@ def fill_tbs(file_name,tb_fill_dict):
 
 def integrity_check(file_name,tb_creation_dict,tb_fill_dict):
 
-    check_tb_existence(file_name,tb_creation_dict)
+    if len(tb_creation_dict)==0 or len(tb_fill_dict)==0:
+        print('Empty file')
+    else:
+        check_tb_existence(file_name,tb_creation_dict)
 
-    conn = sqlite3.connect(file_name)
-    cursor = conn.cursor()
-    cursor.execute('''
-    SELECT name FROM sqlite_master WHERE type='table';''')
-    print(cursor.fetchall())
+        conn = sqlite3.connect(file_name)
+        cursor = conn.cursor()
+        cursor.execute('''
+        SELECT name FROM sqlite_master WHERE type='table';''')
+        print(cursor.fetchall())
 
-    fill_tbs(file_name,tb_fill_dict)
+        fill_tbs(file_name,tb_fill_dict)
